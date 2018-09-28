@@ -5,13 +5,15 @@ import unittest
 # that is n copies of the original string.
 
 def string_times(string, n):
-    return
+    return string * n
 
 # Given an array of ints, return True if one of the first 4 elements
 # in the array is a 9. The array length may be less than 4.
 def array_front9(nums):
     #longueur=min(len(nums) & 4)
-    return
+    for n in nums[:4]:
+        if n == 9 : return True
+    return False
 
 # Given a string, return the count of the number of times
 # that a substring length 2 appears  in the string and also as
@@ -23,28 +25,38 @@ def last2(string):
 # Test it with the Lorem upsuj
 #"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
 def occurences(text):
-  return
+    mydict = {}
+    for c in text:
+        if mydict.get(c.lower()) is None : mydict[c.lower()] = 1
+        else: 
+            mydict[c.lower()] += 1
+    return mydict
 
-#Write a program that maps a list of words into a list of
-#integers representing the lengths of the correponding words.
 def length_words(array):
-    return
-
+    res = []
+    for w in array:
+        res.append(len(w))
+    return res
 
 #Write a function that takes a number and returns a list of its digits.
 def number2digits(number):
-  return
+    list = []
+    for i in str(number): list.append(i)
+    return list
 
 #Write function that translates a text to Pig Latin and back.
 #English is translated to Pig Latin by taking the first letter of every word,
 #moving it to the end of the word and adding 'ay'
 def pigLatin(text):
-  return
+    res = ""
+    for w in text.split():
+        res += w[1:] + w[0] + "ay" + " "
+    return res
 
 
 #write fizbuzz programm
 def fizbuzz():
-    return
+    return  "fizz"
 
 
 response = {
