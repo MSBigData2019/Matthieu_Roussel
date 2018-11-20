@@ -11826,7 +11826,7 @@ div#notebook {
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <div class="alert alert-info">
-<span class="label label-primary" style="font-size:15px;">Kaggle user name and final performance</span><br><br>
+<span class="label label-primary" style="font-size:15px;">Kaggle user name and final performances</span><br><br>
 </div>
 </div>
 </div>
@@ -11837,14 +11837,14 @@ div#notebook {
 <div class="text_cell_render border-box-sizing rendered_html">
 <ul>
 <li><p>Identidication</p>
-<p>Kaggle name : matthieu 
-  Student : Matthieu Roussel)</p>
+<p>Kaggle name : matthieu </p>
+<p>Student : Matthieu Roussel</p>
 </li>
 </ul>
 <ul>
 <li><p>Final scores :</p>
 <p>Python Notebook Final Score under Kaggle : 0.95711</p>
-<p><strong>Important</strong> : best Databricks Score under Kaggle voer the 30% sample :  0.92368</p>
+<p><strong>Important</strong> : best Databricks Score under Kaggle over the 30% sample :  0.92368</p>
 </li>
 </ul>
 
@@ -11865,7 +11865,7 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>The overall approach was for me to test a lot of approaches :</p>
+<p>The overall approach was for me to try a lot of methods :</p>
 <ol>
 <li>Simple straight ahead pipeline,</li>
 <li>Tuning the hyperparameters by cv</li>
@@ -11873,16 +11873,16 @@ div#notebook {
 <li>Try a few data transformations</li>
 <li>Try some blending of models</li>
 </ol>
-<p>I have tried many model types and approches, starting with simple pipelines + tuning in Databricks and then trying the further approaches as presented in this notebook. The aim was to test a lot of different techniques, finding inspiration in documentations and online examples. I have presented here a good part of the whole process here, keeping track of major attempts. The work does not reflect the exhaustivity of the multiple attempts tuning the hyperparamters, trying with smaller train samples ; approches degrading the results (unsuccessfull attempts to tune an MLP, reencode one encoders in one variable) have been discard.</p>
-<p>In all approaches, I always kept a % for testing before submitting (varying from 30% to 5%).</p>
-<p>In more details :</p>
+<p>I have attempted many model types and approches, starting with simple straightforward pipelines + tuning, in Databricks and then experimenting more approaches as presented in this notebook. I have covered in this notebook a fair part of the whole process, keeping track of major attempts. The work does however not reflect the exhaustivity of the multiple attempts to tune the hyperparamters, multiple runs with smaller train samples ; approches degrading the results (unsuccessfull attempts to tune an MLP, reencode one encoders in one variable) have been discard.</p>
+<p>At all times, I kept a % for testing before submitting (varying from 30% to 5%).</p>
+<p>Further details :</p>
 <ol>
 <li><p>Databricks attempts</p>
 <p>I have tryed very hard to stick with Databricks on this challenge.</p>
-<p>I obtained with a litle efforts an accuracy of 0.87 using a random forest (max_depth 25, number of trees : 30), tuned with gridsearch on the 2 mentioned parameters. This first "encouraging" result was obtained after attempts of fine tuning of multinomial logistic regression (regParam) and decision trees.</p>
+<p>I obtained with a litle efforts an accuracy of 0.87 using a random forest (max_depth 25, number of trees : 30), tuned with gridsearch on the 2 mentioned parameters. This first "encouraging" result was obtained after several attempts of fine tuning of multinomial logistic regression (regParam) and decision trees.</p>
 <p>I then tried hard to get above 0,87 by tuning the hyperparameters of the random forest (max_depth, number of trees, maxBins, minInstancesPerNode, impurity, featureSubsetStrategy) , generating more complexe trees (number of trees and other parameters). I than started to run into severe problems : using grid parameters, the cluster just kept shutting down after 15 to 30 minutes of processing. I encountered memory errors with the java garbage collector ("GC overhead limit exceeded"), wich could not be resolved with the community version.</p>
 <p>As soon as the number of trees got above 50 or 75 (with a tradeoff with max_depth value), the problem occured. I tried than to run single attemps, or simple split test/validation runs. The only solution was for me to reduce the training set consequently, degrading then the overall performances.</p>
-<p>After spending a lot of time to try to fine tune the model under Databricks, I got very frustrated and decided to make attemps under regluar python notebook, presented here.</p>
+<p>After spending a lot of time to try to fine tune the model under Databricks, I got very frustrated and decided to make attempts under regluar python notebook, as presented here.</p>
 </li>
 </ol>
 <ol>
@@ -11893,7 +11893,7 @@ div#notebook {
 <li>Tuning hyperparameters</li>
 <li>Feature engineering : a few simple transformations applied</li>
 <li>Second run of models (initial, fine tuning) with these features, with few improvements</li>
-<li>I decide to try to reduce the demensions of the wilderness area and soil flags. I builded a submodel based on the soil type and wilderness area flags making a weak but stable model/subscore for the one variables (0,64 accuracy); I then just used the probability of each class as new features.  </li>
+<li>I decide to try to reduce the demensions of the wilderness area and soil flags. I 've built a submodel based on the soil type and wilderness area flags making a weak but stable model/subscore for the one variables (0,64 accuracy); I then just used the probability of each class as new features.  </li>
 <li>I then ran again in the overall process, sticking with random forrest at first. I tried few other metods (extra trees, xgbost) with a minimal tuning. I wanted to avoid long treatments for very small gain. Overall, integrating the ones scores to the final model lead to a very small complementary increase of accuracy. </li>
 </ul>
 </li>
@@ -11901,7 +11901,7 @@ div#notebook {
 <p>I should have further more try to replace the few abnormal values in shading but did not invest time on this.</p>
 <ol>
 <li><p>Back to Databricks</p>
-<p>I went back to Databricks, and tried this time to fine tune simple decision trees classifier. In a logic of improvement, I tryed as I did here to build a one vs rest model using the decision tree calssifers and my fine tuning (maxdepth : 30, MaxBins : 40, minInstancesPerNode=5). It lead me to my final "Databricks" accuracy of <strong>0.92368</strong>. I submitted that one to to Kaggle (but not for the final results). The only feature engeneering I did further more was to decode the "onehotencoders" variable into single catégorical variables : one for wilderness and one for soil type.</p>
+<p>I went back to Databricks, and tried this time to fine tune simple decision trees classifier. In a logic of improvement, I tryed as I did here to build a one vs rest model using the decision tree classifers and my fine tuning (maxdepth : 30, MaxBins : 40, minInstancesPerNode=5). It lead me to my final "Databricks" accuracy of <strong>0.92368</strong>. I submitted that one to to Kaggle (but not for the final results). The only feature engeneering I did further more was to decode the "onehotencoders" variable into single catégorical variables : one for wilderness and one for soil type.</p>
 </li>
 </ol>
 
@@ -14463,7 +14463,7 @@ Mean Feature Importance 0.0158
 An overeall significant improvement after basic features transformations : accuracy of 0,9525 (with transf.) vs 0.9392 before
 Concerning the features :</p>
 <ul>
-<li>Elevation still holds the first rank but its contribution is reduced in favour of a composed variable (dist_combo_7), combining again elevation and vertical distance to hydrology (and representing the direct distance to hydrology, hypothenuse). </li>
+<li>Elevation still holds the first rank but its contribution is reduced in favour of a composed variable (dist_combo_7), combining again elevation and vertical distance to hydrology. </li>
 <li>Overall computed and initial distances variables still represent about 70% of the model explanatory power. </li>
 <li>The overall remaining features is globally unchanged</li>
 </ul>
