@@ -1,0 +1,261 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Oct 23 14:43:26 2018
+
+@author: matthieuroussel
+
+https://www.leboncoin.fr/recherche/?category=2&text=Renault%20Zoé&regions=12
+regions=21 -> paca
+regions=2 -> aquitaine
+
+page https://www.leboncoin.fr/voitures/1511162920.htm/
+
+ http://www.lacentrale.fr/cote-voitures-renault-zoe--2013-.html
+ 
+ Life
+ Intens
+ Zen
+ Edition One
+ StarWars
+ 
+"""
+
+# coding: utf-8
+import pandas as pd
+import requests
+import unittest
+import re
+import threading
+from urllib.request import urlopen
+from bs4 import BeautifulSoup
+import time
+
+# récupérer la page dans un objet soup
+def getSoup(url):
+    res = requests.get(url)
+    if  res.status_code == 200:
+    
+        html_doc =  res.text
+        soup = BeautifulSoup(html_doc,"html.parser")
+        return soup
+    return None
+
+# Récupérer le nombre de pages de resultats de recherche à scroller
+def getPagesCount(url):
+    soup = getSoup(url)
+    if (soup is None) : 
+        return -1
+    else:
+        txtpages = soup.find_all(text=re.compile("search_page_number",flags=re.DOTALL))
+        strConv = str(txtpages[0])
+        pages = int(strConv[txtpages[0].find('search_page_number')+len("search_results_number")+2:txtpages[0].find('search_results_number')-10])
+        print("Pages : %d" % (pages))
+    return pages
+
+# récupérer l'url des annonces
+def getAnnoncesPages(k, start,end, web_racine ,website_query1 ,web_suf):
+    global l_url_annonce
+    #print("Threadxxxxx %d : pages %d à %d" % (k,start,end))
+    
+    for i in range(start,end):
+        compt = 0
+        #time.sleep(2)
+        res = requests.get(web_racine + website_query1 + str(i+1) + web_suf)
+        if  res.status_code == 200:
+            html_doc =  res.text
+            soup = BeautifulSoup(html_doc,"html.parser")
+            ldiv = soup.find_all('div',attrs={"class":"adLineContainer"})
+          
+            for div in ldiv:
+                try :
+                    res = div.find('div',attrs={"class":u"adContainer"})
+                    res2 = res.find('a')
+                    verrou.acquire()
+                
+                    l_url_annonce.append(web_racine + res2.get('href'))
+                
+                    verrou.release()
+                    compt+=1
+                    #print(compt)
+                except : 
+                    pass
+        else : 
+            verrou.acquire()
+            l_url_annonce=[-1]
+            verrou.release()
+            print("Anomalie dans la lecture des url d'annonces")
+            break;
+        print("thread %d : %d annonces" % (k,compt))
+
+# découper une liste pour lancer des threads
+def getDecoupage(pages,ndiv):
+    #découpage des pages
+    l_dec = []
+    decoupage = pages // ndiv
+    reste = pages-decoupage * ndiv
+    print(decoupage)
+    l_dec.append(0)
+    print(reste)
+    if pages < ndiv:
+        l_dec.append(pages)
+    else:
+        for i in range(ndiv-1):
+            print("i : %d" % (i))
+            l_dec.append((i+1)*decoupage)
+        l_dec.append((i+2)*decoupage+reste)  
+        print("dernier elt %d : %d" %(i+1,(i+2)*decoupage+reste))
+    
+    return l_dec
+
+# Récupérer la cote d'un véhicule à partir de l'url fournie sur l'annonce
+def getCote(url_cote):
+    cote = 0 
+    soup = getsoup(url_cote)
+    
+    return cote    
+#def main():
+bad_chars = '()%-\n'
+l_url_annonce = []
+verrou = threading.Lock()
+#verrou = threading.Lock()
+Marque="RENAULT"
+modele = "ZOE"
+Regions = ["FR-IDF","FR-OCC","FR-PAC"]
+website_query1 = "/listing?makesModelsCommercialNames=RENAULT%3AZOE&energies=dies&options=&page="
+web_suf = "regions=FR-IDF%2CFR-OCC%2CFR-PAC"
+web_racine = "https://www.lacentrale.fr"
+
+pages = getPagesCount( web_racine + website_query1 + "1" + web_suf)
+#print(pages)
+bContinue = True
+ndiv=4
+
+l_dec=getDecoupage(pages,ndiv)
+k = len(l_dec)
+#print("Iterations : %d" % (k-1))
+#print("pages par itérations: %d" % (decoupage))  
+#print("reste : %d" % (reste))
+for item in l_dec:
+    print(item)
+
+t = []
+#getAnnoncesPages(k, 0,3, web_racine ,website_query1 ,web_suf)
+# Lancement des threads 
+for i in range(k-1):
+    #print("Thread %d : %d à %d" % (i+1,l_dec[i],l_dec[i+1]))
+    thread = threading.Thread(target=getAnnoncesPages, args=(i, l_dec[i], l_dec[i+1],web_racine,website_query1,web_suf))
+    thread.start()
+    t.append(thread)
+    
+# Attente de la fin d'exécution de l'ensemble des threads
+for thread in t:
+    thread.join()
+# Vérification si le traitement est allé au bout pour chaque thread
+for item in l_url_annonce:
+    if item == -1:
+        print("Une annomalie s'est produite dans le chargement de la liste des annonces")
+        bContinue = False
+        break
+# Affichage
+bad_chars = '()%-\n'
+
+print("%d annonces" % (len(l_url_annonce)))
+
+df = pd.DataFrame([
+        ["Renault","zoe",  "intens",2018, 11000, 50000., 55000, 0.2, "01 01 01 01 01", "Particulier","url"]
+        ], columns=['Marque','Modèle','Version','Année', 'Kilométrage',
+               'Prix','Cote','Ratio','Tel','Type de Vendeur',"url"
+               ])
+df = df.drop([0])
+
+#l_dec=getDecoupage(len(l_url_annonce),ndiv)
+#k = len(l_dec)
+#t = []
+#getAnnoncesPages(k, 0,3, web_racine ,website_query1 ,web_suf)
+# Lancement des threads 
+"""for i in range(k-1):
+    #print("Thread %d : %d à %d" % (i+1,l_dec[i],l_dec[i+1]))
+    thread = threading.Thread(target=getAnnoncesPages, args=(i, l_dec[i], l_dec[i+1],web_racine,website_query1,web_suf))
+    thread.start()
+    t.append(thread)
+    
+# Attente de la fin d'exécution de l'ensemble des threads
+for thread in t:
+    thread.join()"""
+#children[0].text.translate(str.maketrans(bad_chars,"    ")).strip()
+compteur = 0
+if bContinue:
+    for item in l_url_annonce:
+        tab = []
+        soup = getSoup(item)
+        str_int = soup.find("h3").text.translate(str.maketrans(bad_chars,"     ")).strip()
+        l_lu = str_int.split()
+        #######################################################################
+        # Données de base
+        #######################################################################
+        # marque
+        tab.append(Marque)
+        # modèle
+        if len(l_lu) > 0:
+            tab.append(l_lu[0])
+        else : tab.append("")
+        # version
+        str_version = ""
+        if len(l_lu) > 1:
+            for lu in l_lu[1:]:
+                str_version += lu + " "
+            tab.append(str_version.strip())
+        else : tab.append("")
+        # Année
+        td = soup.find("ul", class_= "infoGeneraleTxt column2")
+        tab.append(int(td.find_all("span")[0].text))
+        # Km
+        strKm = td.find_all("span")[1].text
+        tab.append(int(strKm[:len(strKm)-3].replace(" ","")))
+        # td = soup.find("strong", class_= "sizeD lH35 inlineBlock vMiddle ") 
+        # Prix
+        strPrix = soup.find("strong", class_= "sizeD lH35 inlineBlock vMiddle ").text.translate(str.maketrans(bad_chars,"     ")).strip()[:-2]
+        tab.append(int(strPrix[:len(strPrix)].replace(" ","")))
+        # Tel
+        tel=soup.find("div", class_= "phoneNumber1").text.translate(str.maketrans(bad_chars,"     ")).strip().split()
+        tab.append(tel[0] + " " + tel[1] + " " + tel[2] + " " + tel[3] + " " + tel[4] + " " + tel[5])
+        # Type de vendeur bold italic mB10
+        str_int = soup.find("div", class_= "bold italic mB10").text.translate(str.maketrans(bad_chars,"     ")).strip()
+        tab.append(str_int)
+        tab.append(item)
+        #######################################################################
+        # Recherche de la cote
+        #######################################################################
+        # url = https://www.lacentrale.fr/fiche_cote_auto_flat.php?source=detail&marque=renault&modele=zoe&version=q90%2Bintens%2Bcharge%2Brapide&type=perso&millesime=2014&km=28330&zipcode=59500&price=9300&ref=69103299186&fh=1&fdt=2014-11
+        # Données nécessaires : 
+        # marque : RENAULT Marque
+        # modele : ZOE tab[1]
+        # version : Q90 INTENS charge rapide tab[2]
+        # millesime : 2014 tab[3]
+        # km : 223990 tab[4]
+        # fdt : 2014-11 
+        # Au final, accès directement à la cote par div class cote w50LTablet hiddenPhone puis a =lass btnDark txtL block
+        tmp = soup.find("div", class_="cote w50LTablet hiddenPhone")
+        
+        url_cote = web_racine + tmp.find("a").get("href")
+        tab.append(getCote(url_cote))
+        #######################################################################
+        # Stockage
+        #######################################################################
+        # stockage dans un dataframe
+        df2 = pd.DataFrame([tab],
+                   columns=['Marque','Modèle','Version','Année', 'Kilométrage',
+               'Prix','Tel','Type de Vendeur',"url"])
+        df = df.append(df2)
+        for item in tab:
+            print(item)
+        compteur+=1
+        if compteur == 5 : break
+
+    print(df)
+        
+
+    
+    
+#main()
